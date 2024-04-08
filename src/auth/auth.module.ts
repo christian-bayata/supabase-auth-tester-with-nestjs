@@ -1,12 +1,16 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { PassportModule } from '@nestjs/passport';
+import { SupabaseStrategy } from '../guards/supabase.strategy';
+import { userProviders } from './auth.provider';
+import { AuthRepository } from './auth.repository';
+import { DatabaseModule } from 'src/database/database.module';
 
 @Module({
-  imports: [],
+  imports: [DatabaseModule, PassportModule],
   controllers: [AuthController],
-  providers: [AuthService],
-  exports: [AuthService],
+  providers: [...userProviders, AuthService, SupabaseStrategy, AuthRepository],
+  exports: [AuthService, SupabaseStrategy],
 })
 export class AuthModule {}

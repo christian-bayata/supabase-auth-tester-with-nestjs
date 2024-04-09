@@ -4,13 +4,19 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { AppResponse } from 'src/common/app.response';
 import { AuthRepository } from './auth.repository';
 import { hashSync, genSaltSync, compareSync } from 'bcrypt';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 @Injectable()
 export class AuthService {
+  private supabase: SupabaseClient;
   constructor(
     private readonly configService: ConfigService,
     private readonly authRepository: AuthRepository,
-  ) {}
+  ) {
+    const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
+    const supabaseKey = this.configService.get<string>('SUPABASE_KEY');
+    this.supabase = createClient(supabaseUrl, supabaseKey);
+  }
 
   private readonly ISE: string = 'Internal Server Error';
 
@@ -25,30 +31,20 @@ export class AuthService {
     try {
       let { firstName, lastName, email, password } = createUserDto;
 
-      const userExists = await this.authRepository.findUser({
+      let { data, error } = await this.supabase.auth.signUp({
         email,
+        password,
       });
-      if (userExists) {
-        AppResponse.error({
-          message: 'User already exists',
-          status: HttpStatus.CONFLICT,
-        });
+
+      if (error) {
+        if (error.message === 'Email rate limit exceeded') {
+          console.error('Email rate limit exceeded. Please try again later.');
+        } else {
+          console.error('Sign-up error:', error.message);
+        }
+        return null;
       }
-
-      /* Hash password before storing it */
-      password = password ? hashSync(password, genSaltSync()) : null;
-
-      function userData(): CreateUserDto {
-        return {
-          firstName,
-          lastName,
-          email,
-          password,
-        };
-      }
-
-      await this.authRepository.createUser(userData());
-      return;
+      return data;
     } catch (error) {
       error.location = `AuthServices.${this.signup.name} method`;
       AppResponse.error(error);

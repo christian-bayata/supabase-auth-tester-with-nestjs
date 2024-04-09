@@ -17,7 +17,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { Request, Response } from 'express';
 
 const { success } = AppResponse;
-@Controller('auth')
+@Controller('supabase/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

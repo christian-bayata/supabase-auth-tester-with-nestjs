@@ -33,4 +33,15 @@ export class AuthController {
       .status(201)
       .json(success('Successfully created user', 201, data));
   }
+
+  @Post('/login')
+  async login(
+    @Req() req: any,
+    @Res() res: Response,
+    @Body() accessCode: string,
+  ): Promise<Response> {
+    const data = await this.authService.login(accessCode);
+
+    return res.status(200).json(success('Successfully logged in', 200, data));
+  }
 }

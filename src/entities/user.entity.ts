@@ -16,7 +16,7 @@ export class User {
   email: string;
 
   @Column()
-  password: string;
+  accessCode: string;
 
   @Column({ default: false })
   isVerified: boolean;
